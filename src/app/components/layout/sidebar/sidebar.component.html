@@ -1,0 +1,36 @@
+<div class="sidebar">
+  <div class="sidebar-header">
+    <img src="https://static.ifood-static.com.br/image/upload/t_high/logosgde/925025ac-473e-4328-8a9c-efb98a7c631c/202306151814_AoKG_i.jpg" alt="Araldi" class="logo" />
+    <h2>Gestão Financeira</h2>
+  </div>
+  
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li *ngFor="let item of menuItems" class="nav-item">
+        <a 
+          *ngIf="!item.items" 
+          [routerLink]="item.routerLink" 
+          routerLinkActive="active"
+          class="nav-link">
+          <i [class]="item.icon"></i>
+          <span>{{ item.label }}</span>
+        </a>
+        
+        <div *ngIf="item.items" class="nav-group">
+          <div class="nav-group-header">
+            <i [class]="item.icon"></i>
+            <span>{{ item.label }}</span>
+            <i class="pi pi-chevron-down"></i>
+          </div>
+          <ul class="nav-sublist">
+            <li *ngFor="let subItem of item.items" class="nav-subitem">
+              <a [routerLink]="subItem.routerLink" routerLinkActive="active" class="nav-sublink">
+                {{ subItem.label }}
+              </a>
+            </li>
+          </ul>
+        </div>
+      </li>
+    </ul>
+  </nav>
+</div>

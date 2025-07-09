@@ -1,0 +1,124 @@
+<div class="controle-itens">
+  <div class="page-header">
+    <h2>Controle de Itens</h2>
+    <p>Acompanhe a evolução de preços e histórico de compras</p>
+  </div>
+
+  <div class="item-selector">
+    <p-card>
+      <div class="selector-content">
+        <label for="itemSelect">Selecione um Item:</label>
+        <p-dropdown 
+          id="itemSelect"
+          [options]="itens" 
+          [(ngModel)]="selectedItem"
+          optionLabel="nome"
+          placeholder="Escolha um item"
+          [style]="{'width': '300px'}"
+          (onChange)="onItemChange()">
+        </p-dropdown>
+        <button 
+          pButton 
+          label="Editar Item" 
+          icon="pi pi-pencil"
+          class="p-button-secondary"
+          (click)="editarItem()">
+        </button>
+      </div>
+    </p-card>
+  </div>
+
+  <div class="item-details" *ngIf="selectedItem">
+    <div class="details-grid">
+      <div class="chart-section">
+        <p-card>
+          <ng-template pTemplate="header">
+            <h3>Evolução de Preços - {{ selectedItem.nome }}</h3>
+          </ng-template>
+          <p-chart 
+            type="line" 
+            [data]="chartData" 
+            [options]="chartOptions"
+            width="100%"
+            height="300px">
+          </p-chart>
+        </p-card>
+      </div>
+
+      <div class="info-section">
+        <p-card>
+          <ng-template pTemplate="header">
+            <h3>Informações do Item</h3>
+          </ng-template>
+          <div class="item-info">
+            <div class="info-row">
+              <label>Nome:</label>
+              <span>{{ selectedItem.nome }}</span>
+            </div>
+            <div class="info-row">
+              <label>Categoria:</label>
+              <span>{{ selectedItem.categoria }}</span>
+            </div>
+            <div class="info-row">
+              <label>Unidade:</label>
+              <span>{{ selectedItem.unidade }}</span>
+            </div>
+            <div class="info-row">
+              <label>Último Preço:</label>
+              <span class="price-highlight">{{ formatCurrency(33.50) }}</span>
+            </div>
+            <div class="info-row">
+              <label>Variação:</label>
+              <span class="price-up">+2.4% ↗</span>
+            </div>
+          </div>
+        </p-card>
+      </div>
+    </div>
+
+    <div class="purchases-section">
+      <p-card>
+        <ng-template pTemplate="header">
+          <h3>Últimas Compras - {{ selectedItem.nome }}</h3>
+        </ng-template>
+        <p-table [value]="ultimasCompras" [responsive]="true">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Data</th>
+              <th>Valor por {{ selectedItem.unidade }}</th>
+              <th>Fornecedor</th>
+              <th>Variação</th>
+              <th>Ações</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-compra let-i="rowIndex">
+            <tr>
+              <td>{{ formatDate(compra.data) }}</td>
+              <td>{{ formatCurrency(compra.valor) }}</td>
+              <td>{{ compra.fornecedor }}</td>
+              <td>
+                <span 
+                  *ngIf="i < ultimasCompras.length - 1"
+                  [class]="compra.valor > ultimasCompras[i + 1].valor ? 'price-up' : 'price-down'">
+                  {{ compra.valor > ultimasCompras[i + 1].valor ? '+' : '' }}
+                  {{ ((compra.valor - ultimasCompras[i + 1].valor) / ultimasCompras[i + 1].valor * 100).toFixed(1) }}%
+                  {{ compra.valor > ultimasCompras[i + 1].valor ? '↗' : '↘' }}
+                </span>
+                <span *ngIf="i === ultimasCompras.length - 1" class="text-muted">-</span>
+              </td>
+              <td>
+                <button 
+                  pButton 
+                  icon="pi pi-eye" 
+                  class="p-button-text p-button-sm"
+                  pTooltip="Ver Nota"
+                  (click)="verNota(compra)">
+                </button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </div>
+  </div>
+</div>

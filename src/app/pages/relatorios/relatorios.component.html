@@ -1,0 +1,131 @@
+<div class="relatorios">
+  <div class="page-header">
+    <h2>Relatórios Gerenciais</h2>
+    <p>Gere relatórios personalizados para análise financeira</p>
+  </div>
+
+  <div class="filtros-section">
+    <p-card>
+      <ng-template pTemplate="header">
+        <h3>Filtros Globais</h3>
+      </ng-template>
+      <div class="filtros-grid">
+        <div class="filtro-item">
+          <label>Data Início:</label>
+          <p-calendar 
+            [(ngModel)]="filtros.dataInicio"
+            dateFormat="dd/mm/yy"
+            placeholder="Selecione a data">
+          </p-calendar>
+        </div>
+        <div class="filtro-item">
+          <label>Data Fim:</label>
+          <p-calendar 
+            [(ngModel)]="filtros.dataFim"
+            dateFormat="dd/mm/yy"
+            placeholder="Selecione a data">
+          </p-calendar>
+        </div>
+        <div class="filtro-item">
+          <label>CNPJ:</label>
+          <p-dropdown 
+            [options]="cnpjOptions" 
+            [(ngModel)]="filtros.cnpj"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione o CNPJ">
+          </p-dropdown>
+        </div>
+        <div class="filtro-item">
+          <label>Centro de Custo:</label>
+          <p-dropdown 
+            [options]="centroCustoOptions" 
+            [(ngModel)]="filtros.centroCusto"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Selecione o centro">
+          </p-dropdown>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <div class="relatorios-grid">
+    <div *ngFor="let relatorio of relatorios" class="relatorio-card">
+      <p-card>
+        <div class="card-content">
+          <div class="card-header">
+            <div class="icon-container">
+              <i [class]="relatorio.icon" [style.color]="getCategoriaColor(relatorio.categoria)"></i>
+            </div>
+            <div class="categoria-badge" [style.background-color]="getCategoriaColor(relatorio.categoria)">
+              {{ relatorio.categoria }}
+            </div>
+          </div>
+          
+          <div class="card-body">
+            <h3>{{ relatorio.titulo }}</h3>
+            <p>{{ relatorio.descricao }}</p>
+          </div>
+          
+          <div class="card-actions">
+            <button 
+              pButton 
+              label="Gerar" 
+              icon="pi pi-play"
+              class="p-button-primary p-button-sm"
+              (click)="gerarRelatorio(relatorio)">
+            </button>
+            <div class="export-buttons">
+              <button 
+                pButton 
+                icon="pi pi-file-pdf" 
+                class="p-button-text p-button-sm"
+                pTooltip="Exportar PDF"
+                (click)="exportarPDF(relatorio)">
+              </button>
+              <button 
+                pButton 
+                icon="pi pi-file-excel" 
+                class="p-button-text p-button-sm"
+                pTooltip="Exportar Excel"
+                (click)="exportarExcel(relatorio)">
+              </button>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <p-card>
+      <ng-template pTemplate="header">
+        <h3>Informações sobre Relatórios</h3>
+      </ng-template>
+      <div class="info-content">
+        <div class="info-item">
+          <i class="pi pi-info-circle"></i>
+          <div>
+            <h4>Filtros Globais</h4>
+            <p>Os filtros definidos acima serão aplicados a todos os relatórios gerados.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-download"></i>
+          <div>
+            <h4>Exportação</h4>
+            <p>Todos os relatórios podem ser exportados em formato PDF ou Excel.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-clock"></i>
+          <div>
+            <h4>Atualização</h4>
+            <p>Os dados são atualizados em tempo real conforme novas importações são realizadas.</p>
+          </div>
+        </div>
+      </div>
+    </p-card>
+  </div>
+</div>

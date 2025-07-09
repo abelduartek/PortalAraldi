@@ -1,0 +1,31 @@
+<div class="header">
+  <div class="header-left">
+    <h1 class="page-title">Sistema de Gestão Financeira - Araldi</h1>
+  </div>
+  
+  <div class="header-right">
+    <div class="user-info">
+      <div class="user-details">
+        <span class="user-name">{{ currentUser.name }}</span>
+        <span class="user-role">{{ currentUser.role }}</span>
+      </div>
+      <div class="user-avatar-initials">
+        <span>{{ getUserInitials() }}</span>
+      </div>
+      <button 
+        pButton 
+        type="button" 
+        icon="pi pi-chevron-down" 
+        class="p-button-text user-menu-btn"
+        #menuButton
+        (click)="toggleMenu($event)">
+      </button>
+      <p-menu 
+        #userMenu 
+        [model]="userMenuItems" 
+        [popup]="true"
+        appendTo="body">
+      </p-menu>
+    </div>
+  </div>
+</div>

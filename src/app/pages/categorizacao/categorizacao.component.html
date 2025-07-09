@@ -1,0 +1,346 @@
+<div class="categorizacao">
+  <div class="page-header">
+    <h2>Categorização de Itens e Fornecedores</h2>
+    <p>Categorize itens e fornecedores não classificados com auxílio da IA</p>
+  </div>
+
+  <div class="stats-cards">
+    <p-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="pi pi-exclamation-triangle"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ itensPendentes.length }}</h3>
+          <p>Itens Pendentes</p>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="pi pi-users"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ fornecedoresPendentes.length }}</h3>
+          <p>Fornecedores Pendentes</p>
+        </div>
+      </div>
+    </p-card>
+
+    <p-card class="stat-card">
+      <div class="stat-content">
+        <div class="stat-icon">
+          <i class="pi pi-check-circle"></i>
+        </div>
+        <div class="stat-info">
+          <h3>{{ sugestoesIA.length }}</h3>
+          <p>Sugestões da IA</p>
+        </div>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Tabs para separar Itens e Fornecedores -->
+  <div class="categorization-tabs">
+    <p-tabView>
+      <p-tabPanel header="Itens Pendentes" leftIcon="pi pi-list">
+        <div class="categorizacao-section">
+          <p-card>
+            <ng-template pTemplate="header">
+              <div class="card-header">
+                <h3>Itens Pendentes de Categorização</h3>
+                <div class="header-actions">
+                  <button 
+                    pButton 
+                    label="Categorizar Todos os Itens" 
+                    icon="pi pi-check"
+                    class="p-button-success"
+                    [disabled]="!hasValidItemSelections()"
+                    (click)="categorizarTodosItens()">
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+
+            <p-table [value]="itensPendentes" [responsive]="true" editMode="row">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>Descrição</th>
+                  <th>Quantidade</th>
+                  <th>Unidade</th>
+                  <th>Valor Unitário</th>
+                  <th>Valor Total</th>
+                  <th>Sugestão IA</th>
+                  <th>Tipo de Despesa</th>
+                  <th>Ações</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-item let-editing="editing" let-ri="rowIndex">
+                <tr [pEditableRow]="item">
+                  <td>
+                    <strong>{{ item.descricao }}</strong>
+                    <br>
+                    <small class="text-muted">NCM: {{ item.ncm }}</small>
+                  </td>
+                  <td>
+                    <p-cellEditor>
+                      <ng-template pTemplate="input">
+                        <input 
+                          pInputText 
+                          type="number" 
+                          [(ngModel)]="item.quantidade"
+                          class="w-full">
+                      </ng-template>
+                      <ng-template pTemplate="output">
+                        {{ item.quantidade }}
+                      </ng-template>
+                    </p-cellEditor>
+                  </td>
+                  <td>
+                    <p-cellEditor>
+                      <ng-template pTemplate="input">
+                        <p-dropdown 
+                          [options]="unidadeOptions" 
+                          [(ngModel)]="item.unidade"
+                          optionLabel="label"
+                          optionValue="value"
+                          class="w-full">
+                        </p-dropdown>
+                      </ng-template>
+                      <ng-template pTemplate="output">
+                        {{ item.unidade }}
+                      </ng-template>
+                    </p-cellEditor>
+                  </td>
+                  <td>{{ formatCurrency(item.valorUnitario) }}</td>
+                  <td>{{ formatCurrency(item.valorTotal) }}</td>
+                  <td>
+                    <div *ngIf="getSugestaoIA(item.descricao) as sugestao" class="sugestao-ia">
+                      <p-tag 
+                        [value]="sugestao.sugestao"
+                        severity="info">
+                      </p-tag>
+                      <div class="confianca">
+                        <small>Confiança: </small>
+                        <span 
+                          [style.color]="getConfiancaColor(sugestao.confianca)"
+                          class="confianca-valor">
+                          {{ sugestao.confianca }}%
+                        </span>
+                      </div>
+                      <button 
+                        pButton 
+                        label="Aceitar" 
+                        icon="pi pi-check"
+                        class="p-button-text p-button-sm p-button-success"
+                        (click)="aceitarSugestao(item)">
+                      </button>
+                    </div>
+                    <div *ngIf="!getSugestaoIA(item.descricao)">
+                      <span class="text-muted">Sem sugestão</span>
+                    </div>
+                  </td>
+                  <td>
+                    <p-dropdown 
+                      [options]="tiposDespesa" 
+                      [(ngModel)]="selectedTiposDespesa[item.id]"
+                      optionLabel="nome"
+                      placeholder="Selecione o tipo"
+                      [style]="{'width': '200px'}">
+                    </p-dropdown>
+                  </td>
+                  <td>
+                    <div class="action-buttons">
+                      <button 
+                        *ngIf="!editing"
+                        pButton 
+                        icon="pi pi-pencil" 
+                        class="p-button-text p-button-sm"
+                        pTooltip="Editar"
+                        pInitEditableRow
+                        (click)="onRowEditInit(item)">
+                      </button>
+                      <button 
+                        *ngIf="editing"
+                        pButton 
+                        icon="pi pi-check" 
+                        class="p-button-text p-button-sm p-button-success"
+                        pTooltip="Salvar"
+                        pSaveEditableRow
+                        (click)="onRowEditSave(item)">
+                      </button>
+                      <button 
+                        *ngIf="editing"
+                        pButton 
+                        icon="pi pi-times" 
+                        class="p-button-text p-button-sm p-button-danger"
+                        pTooltip="Cancelar"
+                        pCancelEditableRow
+                        (click)="onRowEditCancel(item, ri)">
+                      </button>
+                      <button 
+                        *ngIf="!editing"
+                        pButton 
+                        icon="pi pi-save" 
+                        class="p-button-primary p-button-sm"
+                        pTooltip="Salvar Categorização"
+                        [disabled]="!selectedTiposDespesa[item.id]"
+                        (click)="salvarCategorizacao(item)">
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </p-card>
+        </div>
+      </p-tabPanel>
+
+      <p-tabPanel header="Fornecedores Pendentes" leftIcon="pi pi-users">
+        <div class="categorizacao-section">
+          <p-card>
+            <ng-template pTemplate="header">
+              <div class="card-header">
+                <h3>Fornecedores Pendentes de Categorização</h3>
+                <div class="header-actions">
+                  <button 
+                    pButton 
+                    label="Categorizar Todos os Fornecedores" 
+                    icon="pi pi-check"
+                    class="p-button-success"
+                    [disabled]="!hasValidFornecedorSelections()"
+                    (click)="categorizarTodosFornecedores()">
+                  </button>
+                </div>
+              </div>
+            </ng-template>
+
+            <p-table [value]="fornecedoresPendentes" [responsive]="true">
+              <ng-template pTemplate="header">
+                <tr>
+                  <th>CNPJ</th>
+                  <th>Razão Social</th>
+                  <th>Itens Fornecidos</th>
+                  <th>Sugestão IA</th>
+                  <th>Categoria Principal</th>
+                  <th>Ações</th>
+                </tr>
+              </ng-template>
+              <ng-template pTemplate="body" let-fornecedor>
+                <tr>
+                  <td>{{ fornecedor.cnpj }}</td>
+                  <td>
+                    <strong>{{ fornecedor.razaoSocial }}</strong>
+                    <br>
+                    <small class="text-muted">{{ fornecedor.endereco }}</small>
+                  </td>
+                  <td>
+                    <div class="itens-fornecidos">
+                      <span 
+                        *ngFor="let item of fornecedor.itensRelacionados" 
+                        class="item-badge">
+                        {{ item }}
+                      </span>
+                    </div>
+                  </td>
+                  <td>
+                    <div *ngIf="getSugestaoFornecedorIA(fornecedor.razaoSocial) as sugestao" class="sugestao-ia">
+                      <p-tag 
+                        [value]="sugestao.categoria"
+                        severity="info">
+                      </p-tag>
+                      <div class="confianca">
+                        <small>Confiança: </small>
+                        <span 
+                          [style.color]="getConfiancaColor(sugestao.confianca)"
+                          class="confianca-valor">
+                          {{ sugestao.confianca }}%
+                        </span>
+                      </div>
+                      <button 
+                        pButton 
+                        label="Aceitar" 
+                        icon="pi pi-check"
+                        class="p-button-text p-button-sm p-button-success"
+                        (click)="aceitarSugestaoFornecedor(fornecedor)">
+                      </button>
+                    </div>
+                    <div *ngIf="!getSugestaoFornecedorIA(fornecedor.razaoSocial)">
+                      <span class="text-muted">Sem sugestão</span>
+                    </div>
+                  </td>
+                  <td>
+                    <p-dropdown 
+                      [options]="categoriasFornecedor" 
+                      [(ngModel)]="selectedCategoriasFornecedor[fornecedor.id]"
+                      optionLabel="nome"
+                      placeholder="Selecione a categoria"
+                      [style]="{'width': '200px'}">
+                    </p-dropdown>
+                  </td>
+                  <td>
+                    <button 
+                      pButton 
+                      icon="pi pi-save" 
+                      class="p-button-primary p-button-sm"
+                      pTooltip="Salvar Categorização"
+                      [disabled]="!selectedCategoriasFornecedor[fornecedor.id]"
+                      (click)="salvarCategorizacaoFornecedor(fornecedor)">
+                    </button>
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </p-card>
+        </div>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+
+  <div class="info-section">
+    <p-card>
+      <ng-template pTemplate="header">
+        <h3>Como Funciona a Categorização</h3>
+      </ng-template>
+      <div class="info-content">
+        <div class="info-item">
+          <i class="pi pi-lightbulb"></i>
+          <div>
+            <h4>Sugestões Inteligentes</h4>
+            <p>Nossa IA analisa itens e fornecedores sugerindo categorias baseadas em histórico e padrões de compra.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-pencil"></i>
+          <div>
+            <h4>Edição de Dados</h4>
+            <p>Você pode editar quantidade e unidade dos itens diretamente na tabela antes de categorizar.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-users"></i>
+          <div>
+            <h4>Categorização de Fornecedores</h4>
+            <p>Categorize fornecedores por tipo de produto/serviço para melhor organização e análise.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-chart-line"></i>
+          <div>
+            <h4>Comparação de Preços</h4>
+            <p>Após categorizar, você poderá comparar preços do mesmo item entre diferentes fornecedores.</p>
+          </div>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-cog"></i>
+          <div>
+            <h4>Aprendizado Contínuo</h4>
+            <p>Quanto mais você categoriza, mais precisa a IA se torna para futuras sugestões.</p>
+          </div>
+        </div>
+      </div>
+    </p-card>
+  </div>
+</div>

@@ -1,0 +1,242 @@
+<div class="importacao-notas">
+  <div class="page-header">
+    <h2>Importação de Notas Fiscais</h2>
+    <p>Monitoramento e importação automática via Receita Federal</p>
+  </div>
+
+  <div class="cnpjs-section">
+    <p-card>
+      <ng-template pTemplate="header">
+        <div class="card-header">
+          <h3>CNPJs Monitorados</h3>
+          <button 
+            pButton 
+            label="Importar Notas" 
+            icon="pi pi-download"
+            class="p-button-primary"
+            (click)="importarNotas()">
+          </button>
+        </div>
+      </ng-template>
+
+      <p-table [value]="cnpjs" [responsive]="true">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>CNPJ</th>
+            <th>Nome Fantasia</th>
+            <th>Última Importação</th>
+            <th>Status</th>
+            <th>Ações</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-cnpj>
+          <tr>
+            <td>{{ cnpj.cnpj }}</td>
+            <td>{{ cnpj.nomeFantasia }}</td>
+            <td>{{ formatDate(cnpj.ultimaImportacao) }}</td>
+            <td>
+              <p-tag 
+                [severity]="getStatusSeverity(cnpj.status)"
+                [value]="cnpj.status">
+              </p-tag>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button 
+                  pButton 
+                  icon="pi pi-cog" 
+                  class="p-button-text p-button-sm"
+                  pTooltip="Configurações"
+                  (click)="configurarCNPJ(cnpj)">
+                </button>
+                <button 
+                  pButton 
+                  icon="pi pi-history" 
+                  class="p-button-text p-button-sm"
+                  pTooltip="Histórico"
+                  (click)="verHistorico(cnpj)">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+
+  <div class="notas-section">
+    <p-card>
+      <ng-template pTemplate="header">
+        <h3>Histórico de Notas Fiscais</h3>
+      </ng-template>
+
+      <p-table [value]="notasFiscais" [responsive]="true" [dataKey]="'id'">
+        <ng-template pTemplate="header">
+          <tr>
+            <th style="width: 3rem"></th>
+            <th>Número</th>
+            <th>Fornecedor</th>
+            <th>Data</th>
+            <th>Valor Total</th>
+            <th>Status</th>
+            <th>Pagamento</th>
+            <th>Ações</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-nota let-expanded="expanded">
+          <tr>
+            <td>
+              <button 
+                  pButton 
+                  type="button" 
+                  pRipple 
+                  [pRowToggler]="nota" 
+                  class="p-button-text p-button-rounded p-button-plain" 
+                  [icon]="expanded ? 'pi pi-chevron-down' : 'pi pi-chevron-right'">
+              </button>
+            </td>
+            <td>{{ nota.numero }}</td>
+            <td>{{ nota.fornecedor }}</td>
+            <td>{{ formatDate(nota.data) }}</td>
+            <td>{{ formatCurrency(nota.valorTotal) }}</td>
+            <td>
+              <p-tag 
+                [severity]="getNotaStatusSeverity(nota.status)"
+                [value]="getNotaStatusLabel(nota.status)">
+              </p-tag>
+            </td>
+            <td>
+              <p-tag 
+                [severity]="nota.pagamentoIdentificado ? 'success' : 'danger'"
+                [value]="nota.pagamentoIdentificado ? 'Sim' : 'Não'">
+              </p-tag>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button 
+                  pButton 
+                  icon="pi pi-eye" 
+                  class="p-button-text p-button-sm"
+                  pTooltip="Ver Nota"
+                  (click)="verNota(nota)">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="rowexpansion" let-nota>
+          <tr>
+            <td colspan="8">
+              <div class="expanded-content">
+                <div class="expanded-header">
+                  <h4>
+                    <i class="pi pi-list"></i>
+                    Itens da Nota Fiscal {{ nota.numero }}
+                  </h4>
+                  <span class="item-count">{{ nota.itens.length }} {{ nota.itens.length === 1 ? 'item' : 'itens' }}</span>
+                </div>
+                
+                <div class="items-table-container">
+                  <table class="items-table">
+                    <thead>
+                      <tr>
+                        <th>Descrição</th>
+                        <th>Qtd</th>
+                        <th>Unidade</th>
+                        <th>Valor Unit.</th>
+                        <th>Valor Total</th>
+                        <th>NCM</th>
+                        <th>Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let item of nota.itens; let i = index" [class]="i % 2 === 0 ? 'even-row' : 'odd-row'">
+                        <td>
+                          <div class="item-description">
+                            <strong>{{ item.descricao }}</strong>
+                            <span *ngIf="item.tipoDespesa" class="tipo-despesa">{{ item.tipoDespesa }}</span>
+                          </div>
+                        </td>
+                        <td class="text-center">{{ item.quantidade }}</td>
+                        <td class="text-center">{{ item.unidade }}</td>
+                        <td class="text-right">{{ formatCurrency(item.valorUnitario) }}</td>
+                        <td class="text-right">
+                          <strong>{{ formatCurrency(item.valorTotal) }}</strong>
+                        </td>
+                        <td class="text-center">
+                          <code class="ncm-code">{{ item.ncm }}</code>
+                        </td>
+                        <td class="text-center">
+                          <p-tag 
+                            [severity]="item.categorizado ? 'success' : 'warning'"
+                            [value]="item.categorizado ? 'Categorizado' : 'Pendente'"
+                            [style]="{'font-size': '0.75rem'}">
+                          </p-tag>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+                
+                <div class="expanded-footer">
+                  <div class="total-info">
+                    <span class="total-label">Total da Nota:</span>
+                    <span class="total-value">{{ formatCurrency(nota.valorTotal) }}</span>
+                  </div>
+                  <div class="actions-info">
+                    <button 
+                      *ngIf="hasItemsPendentes(nota)"
+                      pButton 
+                      label="Categorizar Itens" 
+                      icon="pi pi-tags"
+                      class="p-button-warning p-button-sm"
+                      routerLink="/categorizacao">
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+</div>
+
+<!-- Dialog para visualizar nota -->
+<p-dialog 
+  header="Detalhes da Nota Fiscal" 
+  [(visible)]="showNotaDialog" 
+  [modal]="true"
+  [style]="{width: '600px'}"
+  [closable]="true">
+  <div *ngIf="selectedNota" class="nota-details">
+    <div class="detail-row">
+      <label>Número:</label>
+      <span>{{ selectedNota.numero }}</span>
+    </div>
+    <div class="detail-row">
+      <label>Fornecedor:</label>
+      <span>{{ selectedNota.fornecedor }}</span>
+    </div>
+    <div class="detail-row">
+      <label>CNPJ Fornecedor:</label>
+      <span>{{ selectedNota.cnpjFornecedor }}</span>
+    </div>
+    <div class="detail-row">
+      <label>Data:</label>
+      <span>{{ formatDate(selectedNota.data) }}</span>
+    </div>
+    <div class="detail-row">
+      <label>Valor Total:</label>
+      <span>{{ formatCurrency(selectedNota.valorTotal) }}</span>
+    </div>
+    <div class="detail-row">
+      <label>Status:</label>
+      <p-tag 
+        [severity]="getNotaStatusSeverity(selectedNota.status)"
+        [value]="getNotaStatusLabel(selectedNota.status)">
+      </p-tag>
+    </div>
+  </div>
+</p-dialog>

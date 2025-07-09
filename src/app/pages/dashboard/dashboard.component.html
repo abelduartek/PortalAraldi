@@ -1,0 +1,254 @@
+<div class="dashboard">
+  <div class="dashboard-header">
+    <h2>Dashboard Financeiro</h2>
+    <p>Visão geral das finanças da Araldi Pizzaria</p>
+  </div>
+
+  <div class="filters-section">
+    <div class="filters-card">
+      <div class="filters-header">
+        <h3>
+          <i class="pi pi-filter"></i>
+          Filtros de Análise
+        </h3>
+      </div>
+      
+      <div class="filters-content">
+        <div class="quick-filters">
+          <button 
+            *ngFor="let period of quickPeriods"
+            pButton 
+            [label]="period.label"
+            [class]="'quick-filter-btn ' + (selectedQuickPeriod === period.value ? 'active' : '')"
+            (click)="selectQuickPeriod(period.value)">
+          </button>
+        </div>
+
+        <div class="filters-grid">
+          <div class="filter-item">
+            <label>
+              <i class="pi pi-calendar"></i>
+              Período Personalizado
+            </label>
+            <div class="date-range-container">
+              <div class="date-input-group">
+                <p-calendar 
+                  [(ngModel)]="filters.dataInicio"
+                  dateFormat="dd/mm/yy"
+                  placeholder="Data início"
+                  [showIcon]="true"
+                  inputId="dataInicio"
+                  (onSelect)="onDateChange()">
+                </p-calendar>
+              </div>
+              <div class="date-input-group">
+                <span>até</span>
+                <p-calendar 
+                  [(ngModel)]="filters.dataFim"
+                  dateFormat="dd/mm/yy"
+                  placeholder="Data fim"
+                  [showIcon]="true"
+                  inputId="dataFim"
+                  (onSelect)="onDateChange()">
+                </p-calendar>
+              </div>
+            </div>
+          </div>
+          
+          <div class="filter-item">
+            <label>
+              <i class="pi pi-building"></i>
+              CNPJ
+            </label>
+            <p-dropdown 
+              [options]="cnpjOptions" 
+              [(ngModel)]="filters.cnpj"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione o CNPJ"
+              [showClear]="true"
+              (onChange)="applyFilters()">
+            </p-dropdown>
+          </div>
+          
+          <div class="filter-item">
+            <label>
+              <i class="pi pi-money-bill"></i>
+              Tipo de Receita
+            </label>
+            <p-dropdown 
+              [options]="receitaOptions" 
+              [(ngModel)]="filters.tipoReceita"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione o tipo"
+              [showClear]="true"
+              (onChange)="applyFilters()">
+            </p-dropdown>
+          </div>
+          
+          <div class="filter-item">
+            <label>
+              <i class="pi pi-sitemap"></i>
+              Centro de Custo
+            </label>
+            <p-dropdown 
+              [options]="centroCustoOptions" 
+              [(ngModel)]="filters.centroCusto"
+              optionLabel="label"
+              optionValue="value"
+              placeholder="Selecione o centro"
+              [showClear]="true"
+              (onChange)="applyFilters()">
+            </p-dropdown>
+          </div>
+        </div>
+
+        <div class="filters-actions">
+          <div class="filters-actions-left">
+            <button 
+              pButton 
+              label="Aplicar Filtros" 
+              icon="pi pi-check"
+              class="filter-button p-button-primary"
+              (click)="applyFilters()">
+            </button>
+            <button 
+              pButton 
+              label="Limpar Tudo" 
+              icon="pi pi-times"
+              class="filter-button p-button-secondary"
+              (click)="clearFilters()">
+            </button>
+          </div>
+          <div class="filters-actions-right">
+            <i class="pi pi-check-circle"></i>
+            <span>Filtros aplicados automaticamente</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-cards" *ngIf="dashboardData">
+    <div class="card-row">
+      <p-card class="dashboard-card receitas">
+        <div class="card-content">
+          <div class="card-icon">
+            <i class="pi pi-arrow-up"></i>
+          </div>
+          <div class="card-info">
+            <h3>{{ formatCurrency(dashboardData.totalReceitas) }}</h3>
+            <p>Total Receitas do Período</p>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card class="dashboard-card despesas">
+        <div class="card-content">
+          <div class="card-icon">
+            <i class="pi pi-arrow-down"></i>
+          </div>
+          <div class="card-info">
+            <h3>{{ formatCurrency(dashboardData.totalDespesas) }}</h3>
+            <p>Total Despesas do Período</p>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card class="dashboard-card fluxo-caixa">
+        <div class="card-content">
+          <div class="card-icon">
+            <i class="pi pi-wallet"></i>
+          </div>
+          <div class="card-info">
+            <h3>{{ formatCurrency(dashboardData.fluxoCaixa) }}</h3>
+            <p>Fluxo de Caixa</p>
+          </div>
+        </div>
+      </p-card>
+
+      <p-card class="dashboard-card pendentes">
+        <div class="card-content">
+          <div class="card-icon">
+            <i class="pi pi-exclamation-triangle"></i>
+          </div>
+          <div class="card-info">
+            <h3>{{ dashboardData.itensPendentes }}</h3>
+            <p>Itens Pendentes</p>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <div class="dashboard-content">
+    <div class="chart-section">
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="chart-header">
+            <h3>Evolução do Resultado Líquido</h3>
+            <div class="chart-controls">
+              <p-selectButton 
+                [options]="chartViewOptions" 
+                [(ngModel)]="selectedChartView"
+                optionLabel="label"
+                optionValue="value"
+                (onChange)="updateChartView()">
+              </p-selectButton>
+            </div>
+          </div>
+        </ng-template>
+        <p-chart 
+          type="line" 
+          [data]="chartData" 
+          [options]="chartOptions"
+          width="100%"
+          height="400px">
+        </p-chart>
+      </p-card>
+    </div>
+
+    <div class="alerts-section">
+      <p-card>
+        <ng-template pTemplate="header">
+          <h3>Alertas e Notificações</h3>
+        </ng-template>
+        <div class="alerts-list" *ngIf="dashboardData">
+          <div 
+            *ngFor="let alert of dashboardData.alertas" 
+            class="alert-item">
+            <p-tag 
+              [severity]="getAlertSeverity(alert)"
+              [value]="alert">
+            </p-tag>
+          </div>
+        </div>
+      </p-card>
+    </div>
+  </div>
+
+  <div class="dashboard-actions">
+    <button 
+      pButton 
+      label="Categorizar Itens Pendentes" 
+      icon="pi pi-tags"
+      class="p-button-warning"
+      routerLink="/categorizacao">
+    </button>
+    <button 
+      pButton 
+      label="Importar Novas Notas" 
+      icon="pi pi-download"
+      class="p-button-primary"
+      routerLink="/importacao-notas">
+    </button>
+    <button 
+      pButton 
+      label="Ver Relatórios" 
+      icon="pi pi-chart-bar"
+      class="p-button-secondary"
+      routerLink="/relatorios">
+    </button>
+  </div>
+</div>
